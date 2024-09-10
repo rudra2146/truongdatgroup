@@ -1,21 +1,52 @@
 const Service = require("./products.services.js");
+const multer = require("multer");
+const Product = require("./products.model.js");
+const commonResponse = require('./commonResponse.js');
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/'); 
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
+
 
 module.exports = {
     /**
      * Add
      */
-    create: async (req, res, next) => {
+    create:[upload.single('image'),async (req, res, next) => {
         try {
-            let data = await Service.add(req.body);
+            const { englishName, vietnameseName } = req.body;
+    
+            if (!englishName || !vietnameseName) {
+                return commonResponse.customResponse(res, "BAD_REQUEST", 400, {}, "English name and Vietnamese name are required.");
+            }
+    
+            const image = req.file ? req.file.path : null;
+    
+            const productData = {
+                image,
+                en: { name: englishName },
+                vn: { name: vietnameseName }
+            };
+    
+            const data = await Service.add(productData);
+    
             if (data) {
-                return commonResponse.success(res, "PRODUCTS_CREATE", 200, data, "Success");
+                return commonResponse.success(res, "PRODUCTS_CREATE", 200, data, "Product created successfully");
             } else {
-                return commonResponse.customResponse(res, "SERVER_ERROR", 400, {}, "Something went wrong, Please try again");
+                return commonResponse.customResponse(res, "SERVER_ERROR", 400, {}, "Something went wrong, please try again");
             }
         } catch (error) {
             return commonResponse.CustomError(res, "DEFAULT_INTERNAL_SERVER_ERROR", 500, {}, error.message);
         }
-    },
+    }],
+    
 
     /**
      * Get
@@ -23,22 +54,35 @@ module.exports = {
 
     get: async (req, res, next) => {
         try {
-            let data = await Service.get(req.params.id);
-            const languageCode = req.headers.languageCode
-            const response = {
-                image : data.image,
-                name : data[languageCode].name
-            }
-
+            const data = await Service.get(req.params.id);
+    
             if (!data) {
-                return commonResponse.customResponse(res, "SERVER_ERROR", 400, {}, "Something went wrong, Please try again");
+                return commonResponse.customResponse(res, "SERVER_ERROR", 400, {}, "Product not found");
             }
-            return commonResponse.success(res, "PRODUCTS_GET", 200, data, "Success");
+    
+            const languageCode = req.headers.languageCode || 'vn';
+    
+            let name;
+            if (languageCode === 'en') {
+                name = data.en.name;
+            } else if (languageCode === 'vn') {
+                name = data.vn.name;
+            } else {
+                return commonResponse.customResponse(res, "BAD_REQUEST", 400, {}, "Unsupported language code");
+            }
+    
+            const response = {
+                name: name,
+                image: data.image
+            };
+    
+            return commonResponse.success(res, "PRODUCT_GET", 200, response, "Success");
         } catch (error) {
             return commonResponse.CustomError(res, "DEFAULT_INTERNAL_SERVER_ERROR", 500, {}, error.message);
         }
     },
-
+    
+    
     /**
      * List
      */
@@ -61,7 +105,7 @@ module.exports = {
      * Update
      */
 
-    update: async (req, res, next) => {
+    update: [upload.single('image'), async (req, res, next) => {
         try {
             let update = await Service.update(req.params.id, req.body);
             if (update) {
@@ -72,7 +116,7 @@ module.exports = {
         } catch (error) {
             return commonResponse.CustomError(res, "DEFAULT_INTERNAL_SERVER_ERROR", 500, {}, error.message);
         }
-    },
+    }],
 
     /**
      * delete
