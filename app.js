@@ -5,7 +5,6 @@ const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const winston = require("winston");
 var cors = require("cors");
-global.fetch = require("node-fetch");
 
 const commonResponse = require("./helper/commonResponse");
 
