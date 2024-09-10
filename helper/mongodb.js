@@ -1,13 +1,14 @@
-const mongoose = require("mongoose");
+// helper/mongodb.js
+const mongoose = require('mongoose');
 
-exports.mongo_connection = async () => {
-  mongoose.set("debug", true);
+const mongo_connection = async () => {
   try {
-    console.log(process.env.DB_MONGO_URL);
-   await  mongoose.connect(
-      process.env.DB_MONGO_URL || 'mongodb://localhost:27017/boiler-plat')
-      console.log("MongoDB Connected");
-  } catch (e) {
-    console.log("MongoDB Connection Error");
+    await mongoose.connect('mongodb://localhost:27017/productsName');
+    console.log('MongoDB connected successfully');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    throw err; // Ensure the error is thrown to be caught in the index file
   }
 };
+
+module.exports = { mongo_connection };

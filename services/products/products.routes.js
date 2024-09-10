@@ -1,7 +1,6 @@
+const express = require("express");
 const controller = require("./products.controller");
-const router = require("express").Router();
-const {guard} = require("../../helper");
-
+const router = express.Router();
 /*
  *  Add
  */
