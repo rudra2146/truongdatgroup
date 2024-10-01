@@ -11,8 +11,7 @@ exports.add = async function(reqBody) {
  * Get
  */
 exports.get = async function(id) {
-    return await homeModel.findOne({ _id: id }).sort({ created_at: -1 }).lean();
-}
+    return await homeModel.findById(id);}
 
 /**
  * List

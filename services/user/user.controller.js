@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
-const Service = require("./user.services.js");
+const Service = require("./user.services");
 const {User} = require('./user.model');
 const path = require('path');
 const multer = require('multer');
@@ -60,7 +60,7 @@ const registerUser = async (req, res) => {
 
     try {
       // Check if the user already exists
-      let user = await User.findOne({ email });
+      let user = await Service.get( email );
       if (user) {
         return commonResponse.customResponse(res, "USER_EXISTS", 400, {}, 'User already registered.');
       }
@@ -245,12 +245,11 @@ const deleteUser = async (req, res) => {
   }
 };
 
-
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
-    return res.status(400).json({ message: 'Email is required' });
+    return commonResponse.customResponse(res, "VALIDATION_ERROR", 400, {}, 'Email is required');
   }
 
   try {
@@ -258,9 +257,8 @@ const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     console.log('User found:', user);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return commonResponse.customResponse(res, "USER_NOT_FOUND", 404, {}, 'User not found');
     }
-
 
     // Generate OTP and set expiration time
     const otp = generateOTP();
@@ -274,12 +272,13 @@ const forgotPassword = async (req, res) => {
     await sendOTP(email, otp);
 
     // Respond to the request
-    res.status(200).json({ message: 'OTP sent to your email' });
+    return commonResponse.customResponse(res, "SUCCESS", 200, {}, 'OTP sent to your email');
   } catch (err) {
     console.error('Error in forgotPassword:', err);
-    res.status(500).json({ message: 'Server error.' });
+    return commonResponse.customResponse(res, "SERVER_ERROR", 500, {}, 'Server error.');
   }
 };
+
 
 // Generate OTP function
 function generateOTP() {
@@ -311,41 +310,34 @@ async function sendOTP(email, otp) {
   }
 }
 
-// Change Password using OTP
 const changePasswordWithOTP = async (req, res) => {
   const { email, otp, newPassword } = req.body;
 
   if (!email || !otp || !newPassword) {
-    return res.status(400).json({ message: 'Email, OTP, and new password are required' });
+    return commonResponse.customResponse(res, "VALIDATION_ERROR", 400, {}, 'Email, OTP, and new password are required');
   }
 
   try {
     const otpRecord = await OtpModel.findOne({ email, otp });
     if (!otpRecord || otpRecord.expiresAt < new Date()) {
-      return res.status(400).json({ message: 'Invalid or expired OTP' });
+      return commonResponse.customResponse(res, "INVALID_OTP", 400, {}, 'Invalid or expired OTP');
     }
 
-    const user = await User.findOne({ email:email });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    console.log('User found:', user);
-
+    // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    user.password = hashedPassword;
-    await user.save();
-    
-    // Delete OTP record after successful password change
-    await OtpModel.deleteOne({ email, otp });
+    // Update the user's password
+    await User.findOneAndUpdate({ email }, { password: hashedPassword });
 
-    res.status(200).json({ message: 'Password updated successfully' });
+    // Delete the used OTP record
+    await OtpModel.deleteOne({ _id: otpRecord._id });
+
+    return commonResponse.customResponse(res, "SUCCESS", 200, {}, 'Password changed successfully');
   } catch (err) {
     console.error('Error in changePasswordWithOTP:', err);
-    res.status(500).json({ message: 'Server error.' });
+    return commonResponse.customResponse(res, "SERVER_ERROR", 500, {}, 'Server error.');
   }
 };
-
 module.exports = {
   registerUser,
   loginUser,

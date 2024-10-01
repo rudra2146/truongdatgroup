@@ -2,3 +2,4 @@ node_modules
 ecosystem.config.js
 .env
 public
+.prettierrc
