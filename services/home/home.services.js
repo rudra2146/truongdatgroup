@@ -32,4 +32,9 @@ exports.update = async function(id, reqBody) {
  */
 exports.delete = async function(id) {
     return await homeModel.findByIdAndDelete({ _id: id }).lean();
-} 
+} ,
+
+exports.getByLanguageCode = async function(languageCode) {
+    // Use `findOne` to return a single object for the given language code
+    return await homeModel.findOne({ languageCode: languageCode, deletedAt: null });
+}
