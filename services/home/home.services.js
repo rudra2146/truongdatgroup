@@ -34,3 +34,7 @@ exports.update = async function(id, reqBody) {
 exports.delete = async function(id) {
     return await homeModel.findByIdAndDelete({ _id: id }).lean();
 } 
+
+exports.findByLanguageCode = async (languageCode) => {
+    return await homeModel.findOne({ languageCode });
+};

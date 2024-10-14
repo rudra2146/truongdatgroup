@@ -1,61 +1,186 @@
-const Home = require("./home.model");
-
+const Services = require("./home.services");
 const mongoose = require('mongoose');
 const commonResponse = require('../../helper/commonResponse');
-
+const Home = require('./home.model');
 module.exports = {
-    /**
-     * Add
-     */
-
-    createHome: async (req, res, next) => {
+ 
+     createHome : async (req, res) => {
         try {
-            // Ensure image is uploaded
-            if (!req.file) {
-                return commonResponse.error(
-                    res, 
-                    "Error: carouselImg is required", // Updated error message for clarity
-                    400, 
-                    "CAROUSEL_IMG_REQUIRED" // Updated message code
-                );
+            // Check if yearImg and img were uploaded
+            const yearImgFile = req.files['homeAboutSection[yearImg]'] ? req.files['homeAboutSection[yearImg]'][0].filename : null;
+            const imgFile = req.files['homeAboutSection[img]'] ? req.files['homeAboutSection[img]'][0].filename : null;
+    
+            // Check if carousel images were uploaded
+            const carouselFiles = req.files['homeCarouselSection[carouselImg]'];
+            if (!carouselFiles || carouselFiles.length === 0) {
+                return commonResponse.error(res, "carouselImg is required", 400, "CAROUSEL_IMG_REQUIRED");
             }
     
-            // Prepare home data object, including the image path
-            const homeData = {
-                languageCode: req.body.languageCode,
-                homeCarouselSection: [
-                    { 
-                        carouselTitle: req.body.carouselTitle, 
-                        carouselImg: `/upload/${req.file.filename}` // Multer saves filename
+            const carouselTitles = req.body.carouselTitles || []; // Extract titles if provided
+    
+            // Destructure body data
+            const {
+                languageCode, title, description, buttonTitle,
+                aboutTitle, aboutDescription, animatedText, yearOfWork, 
+                companyYear, companyYearDesc, companyProject, companyProjectDesc,
+                companyCustomer, companyCustomerDesc,  // Added customer destructuring
+                contactTitle, contactAnimatedText, contactCompany, contactMobile, 
+                contactEmail, contactAddress, contactBtn
+            } = req.body;
+    
+            // Ensure the languageCode is either 'en' or 'vn'
+            if (languageCode !== 'en' && languageCode !== 'vn') {
+                return commonResponse.error(res, "Invalid language code", 400, "INVALID_LANGUAGE_CODE");
+            }
+    
+            // Check if the home data already exists based on languageCode
+            const existingHome = await Services.findByLanguageCode(languageCode);
+    
+            // Create or Update logic
+            if (existingHome) {
+                // Update header section
+                existingHome.headerSection = {
+                    title: title || existingHome.headerSection.title,
+                    description: description || existingHome.headerSection.description,
+                    buttonTitle: buttonTitle || existingHome.headerSection.buttonTitle
+                };
+    
+                // Update about section
+                existingHome.homeAboutSection = {
+                    yearImg: yearImgFile ? `/uploads/${yearImgFile}` : existingHome.homeAboutSection.yearImg,  // Update if new image uploaded
+                    img: imgFile ? `/uploads/${imgFile}` : existingHome.homeAboutSection.img,                  // Update if new image uploaded
+                    [languageCode]: {
+                        aboutTitle: aboutTitle || existingHome.homeAboutSection[languageCode].aboutTitle,
+                        aboutDescription: aboutDescription || existingHome.homeAboutSection[languageCode].aboutDescription,
+                        animatedText: animatedText || existingHome.homeAboutSection[languageCode].animatedText,
+                        yearOfWork: yearOfWork || existingHome.homeAboutSection[languageCode].yearOfWork
                     }
-                ],
-                homeContact: { 
-                    title: req.body.title,
-                    animatedText: req.body.animatedText,
-                    company: req.body.company,
-                    mobile: req.body.mobile,
-                    email: req.body.email,
-                    address: req.body.address,
-                    btn: req.body.btn,
-                },
-            };
+                };
     
-            // Create a new home entry
-            const home = new Home(homeData);
-            const savedHome = await home.save();
+                // Update carousel section
+                const updatedCarouselSection = carouselFiles.map((file, index) => ({
+                    title: carouselTitles[index] || existingHome.homeCarouselSection[index]?.title || "",
+                    img: `/uploads/${file.filename}`    // Always update with new file paths
+                }));
+                existingHome.homeCarouselSection = updatedCarouselSection;
     
-            // Send success response
-            commonResponse.success(
-                res, 
-                "Home Created Successfully", 
-                201, 
-                savedHome, 
-                "Success"
-            );
+                // Update company details section
+                existingHome.homeCompanyDetailSection[languageCode] = [
+                    {
+                        year: companyYear || existingHome.homeCompanyDetailSection[languageCode][0].year,
+                        yearDesc: companyYearDesc || existingHome.homeCompanyDetailSection[languageCode][0].yearDesc
+                    },
+                    {
+                        project: companyProject || existingHome.homeCompanyDetailSection[languageCode][1].project,
+                        projectDesc: companyProjectDesc || existingHome.homeCompanyDetailSection[languageCode][1].projectDesc
+                    },
+                    {
+                        customer: companyCustomer || existingHome.homeCompanyDetailSection[languageCode][2].customer,
+                        customerDesc: companyCustomerDesc || existingHome.homeCompanyDetailSection[languageCode][2].customerDesc
+                    }
+                ];
+    
+                // Update contact section
+                existingHome.homeContactData[languageCode] = {
+                    title: contactTitle || existingHome.homeContactData[languageCode].title,
+                    animatedText: contactAnimatedText || existingHome.homeContactData[languageCode].animatedText,
+                    company: contactCompany || existingHome.homeContactData[languageCode].company,
+                    mobile: contactMobile || existingHome.homeContactData[languageCode].mobile,
+                    email: contactEmail || existingHome.homeContactData[languageCode].email,
+                    address: contactAddress || existingHome.homeContactData[languageCode].address,
+                    btn: contactBtn || existingHome.homeContactData[languageCode].btn
+                };
+    
+                // Save updated home data
+                const updatedHome = await existingHome.save();
+                console.log("Home data updated:", updatedHome);
+    
+                return commonResponse.success(res, "Home updated successfully", 200, updatedHome, "UPDATED");
+    
+            } else {
+                // Create new home data
+    
+                // Construct the header section
+                const headerSection = {
+                    title,
+                    description,
+                    buttonTitle
+                };
+    
+                // Construct the about section based on languageCode
+                const homeAboutSection = {
+                    yearImg: `/uploads/${yearImgFile}`,  // Save yearImg path
+                    img: `/uploads/${imgFile}`,          // Save img path
+                    [languageCode]: {                   // Use languageCode as key for language-specific fields
+                        aboutTitle,
+                        aboutDescription,
+                        animatedText,
+                        yearOfWork
+                    }
+                };
+    
+                // Process carousel images
+                const homeCarouselSection = carouselFiles.map((file, index) => ({
+                    title: carouselTitles[index] || "", // Use carousel titles if provided
+                    img: `/uploads/${file.filename}`    // Save each carousel image path
+                }));
+    
+                // Company details section based on languageCode
+                const homeCompanyDetailSection = {
+                    [languageCode]: [
+                        {
+                            year: companyYear || '',
+                            yearDesc: companyYearDesc || ''  // Use destructured variables
+                        },
+                        {
+                            project: companyProject || '',
+                            projectDesc: companyProjectDesc || ''  // Use destructured variables
+                        },
+                        {
+                            customer: companyCustomer || '',
+                            customerDesc: companyCustomerDesc || ''  // Use destructured variables
+                        }
+                    ]
+                };
+    
+                // Contact data section based on languageCode
+                const homeContactData = {
+                    [languageCode]: {
+                        title: contactTitle || '',
+                        animatedText: contactAnimatedText || '',
+                        company: contactCompany || '',
+                        mobile: contactMobile || '',
+                        email: contactEmail || '',
+                        address: contactAddress || '',
+                        btn: contactBtn || ''
+                    }
+                };
+    
+                // Construct the final home data object
+                const homeData = {
+                    languageCode,
+                    headerSection,
+                    homeAboutSection,
+                    homeCarouselSection,
+                    homeCompanyDetailSection,
+                    homeContactData
+                };
+    
+                // Save home data to the database
+                const savedHome = await Services.add(homeData);
+                console.log("Home data saved:", savedHome); // Log to verify saving
+    
+                // Send success response
+                return commonResponse.success(res, "Home created successfully", 201, homeData, "SUCCESS");
+            }
+    
         } catch (error) {
-            next(error);
+            console.error("Error saving home:", error.message || error);
+            return commonResponse.error(res, "Error saving home", 500, "INTERNAL_SERVER_ERROR");
         }
     },
+    
+
     
     
     /**
@@ -107,83 +232,9 @@ module.exports = {
         } catch (error) {
             commonResponse.error(res, "Internal Server Error", 500, error.message);
         }
-    },
+    },  
 
-    /**
-     * Update
-     */
-    updateHome: async (req, res, next) => {
-        try {
-            // Check if the provided ID is valid
-            if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-                return res.status(400).json({ message: "Invalid ID format" });
-            }
-    
-            // Fetch the existing document
-            const home = await Home.findById(req.params.id);
-            if (!home) {
-                return res.status(404).json({ message: "Home Section Not Found" });
-            }
-            console.log('Uploaded File:', req.file);
-            console.log('Request Body:', req.body);
-    
-            // Update fields if provided in request body
-            if (req.body.languageCode) {
-                home.languageCode = req.body.languageCode;
-            }
-    
-            // Update 'homeContact' fields if provided in request body
-            if (req.body.homeContact) {
-                const { title, animatedText, company, mobile, email, address, btn } = req.body.homeContact;
-    
-                if (title) home.homeContact.title = title;
-                if (animatedText) home.homeContact.animatedText = animatedText;
-                if (company) home.homeContact.company = company;
-                if (mobile) home.homeContact.mobile = mobile;
-                if (email) home.homeContact.email = email;
-                if (address) home.homeContact.address = address;
-                if (btn) home.homeContact.btn = btn;
-            }
-    
-            // Update 'homeCarouselSection' fields if provided in request body
-            if (req.body.homeCarouselSection && Array.isArray(req.body.homeCarouselSection)) {
-                req.body.homeCarouselSection.forEach((carouselItem) => {
-                    const existingItem = home.homeCarouselSection.find(item => item._id.toString() === carouselItem._id);
-            
-                    if (existingItem) {
-                        console.log('Found Carousel Item:', existingItem); // Log the found carousel item
-            
-                        if (carouselItem.carouselTitle) {
-                            existingItem.carouselTitle = carouselItem.carouselTitle;
-                            console.log('Updated Carousel Title:', existingItem.carouselTitle); // Log updated title
-                        }
-    
-                        // Only update image if a new file is uploaded
-                        if (req.file) {
-                            existingItem.carouselImg = `/upload/${req.file.filename}`; // Set the image path
-                            console.log('Image updated:', existingItem.carouselImg); // Log updated image
-                        } else {
-                            console.log('No image file uploaded');
-                        }
-                    } else {
-                        console.log('Carousel item not found with ID:', carouselItem._id); // Log if no match
-                    }
-                });
-            }
-            
-            // Save the updated document
-            const updatedHome = await home.save();
-    
-            // Return the updated document
-            res.json({ message: "Home Section Updated", data: updatedHome });
-        } catch (error) {
-            console.error(error);
-            next(error);
-        }
-    },
-     
-
-    /**
+    /*
      * delete
      */
     

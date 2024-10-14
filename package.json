@@ -27,7 +27,7 @@
     "mongoose-delete": "^1.0.2",
     "mongoosejs-soft-delete": "^1.0.2",
     "morgan": "~1.9.1",
-    "multer": "^1.4.2",
+    "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.15",
     "nodemailer-smtp-transport": "^2.7.4",
     "nodemon": "^2.0.4",
