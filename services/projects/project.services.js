@@ -23,3 +23,6 @@ exports.findOne = async (query) => {
 exports.delete = async (id) => {
     return await projectModel.findByIdAndDelete(id).lean();
 };
+exports.findByLanguageCode = async (languageCode) => {
+    return await projectModel.findOne({ languageCode });
+};

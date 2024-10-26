@@ -99,36 +99,6 @@
         }
     },
     ],       
-
-        /**
-         * Get
-         */
-
-        get :  async (req, res, next) => {
-            try {
-                const data = await Service.get(req.params.id);
-                
-                if (!data) {
-                    return commonResponse.customResponse(res, "SERVER_ERROR", 400, {}, "Product not found");
-                }
-        
-                // Set default language to Vietnamese if not provided
-                const languageCode = req.headers.languagecode || 'vn';
-                if (!data[languageCode]) {
-                    return commonResponse.customResponse(res, "SERVER_ERROR", 400, {}, `Language code ${languageCode} not available`);
-                }
-        
-                const response = {
-                    name: data[languageCode].name,
-                    image: data.image
-                };
-        
-                return commonResponse.success(res, "PRODUCT_GET", 200, response, "Success");
-            } catch (error) {
-                return commonResponse.CustomError(res, "DEFAULT_INTERNAL_SERVER_ERROR", 500, {}, error.message);
-            }
-        },
-        
         
         /**
          * List
@@ -178,21 +148,4 @@
                 return commonResponse.CustomError(res, "DEFAULT_INTERNAL_SERVER_ERROR", 500, {}, error.message);
             }
         },
-
-        /**
-         * delete
-         */
-
-        delete: async (req, res, next) => {
-            try {
-                let deleteTerms = await Service.delete(req.params.id);
-                if (deleteTerms) {
-                    return commonResponse.success(res, "PRODUCTS_DELETE", 200, deleteTerms, "Success");
-                } else {
-                    return commonResponse.customResponse(res, "SERVER_ERROR", 400, {}, "Something went wrong, Please try again");
-                }
-            } catch (error) {
-                return commonResponse.CustomError(res, "DEFAULT_INTERNAL_SERVER_ERROR", 500, {}, error.message);
-            }
-        }
     };

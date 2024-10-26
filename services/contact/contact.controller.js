@@ -57,31 +57,5 @@ module.exports = {
             console.error("Error fetching contacts:", error.stack);
             return commonResponse.error(res, "Internal Server Error", 500, error.message);
         }
-    },
-
-    getContactById: async (req, res) => {
-        try {
-            const contact = await Services.get(req.params.id);
-            if (!contact) {
-                return commonResponse.error(res, "Contact Not Found", 404);
-            }
-            return commonResponse.success(res, "Contact Retrieved Successfully", 200, contact);
-        } catch (error) {
-            console.error("Error fetching contact:", error.stack);
-            return commonResponse.error(res, "Internal Server Error", 500, error.message);
-        }
-    },
-
-    deleteContact: async (req, res) => {
-        try {
-            const contact = await Services.delete(req.params.id);
-            if (!contact) {
-                return commonResponse.error(res, "Contact Not Found", 404);
-            }
-            return commonResponse.success(res, "Contact Soft Deleted", 200, contact);
-        } catch (error) {
-            console.error("Error deleting contact:", error.stack);
-            return commonResponse.error(res, "Internal Server Error", 500, error.message);
-        }
     }
 };

@@ -181,8 +181,6 @@ module.exports = {
         }
     },
     
-
-    
     
     /**
      * List
@@ -215,53 +213,4 @@ module.exports = {
             commonResponse.error(res, "Internal Server Error", 500, error.message);
         }
     },
-    
-    
-    
-    /**
-     * Get
-     */
-
-    getHome: async (req, res, next) => {
-        try {
-            if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-                return commonResponse.error(res, "Invalid ID format", 400, "Invalid ID format");
-            }
-            const home = await Home.findById(req.params.id);
-            if (!home) return res.status(404).json({ message: "Home Section Not Found" });
-            commonResponse.success(res, "Home Retrieved Successfully", 200, home, "Success");
-        } catch (error) {
-            commonResponse.error(res, "Internal Server Error", 500, error.message);
-        }
-    },  
-
-    /*
-     * delete
-     */
-    
-    deleteHome: async (req, res, next) => {
-        try {
-            // Check if the provided ID is valid
-            if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-                return commonResponse.error(res, "Invalid ID format", 400, "Invalid ID format");
-            }
-    
-            // Find the document by ID
-            const home = await Home.findById(req.params.id);
-            if (!home) return res.status(404).json({ message: "Home Section Not Found" });
-    
-            // Perform soft-delete
-            await home.delete(); // Soft-delete the document, setting the deletedAt field automatically
-    
-            // Return the soft-deleted document with the deletedAt field included
-            res.json({
-                message: "Home Section Soft Deleted",
-                data: home,  // Sending the home data back in the response
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
-    
-    
 };

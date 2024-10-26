@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "pm2 start ecosystem.config.js --env local"
+    "start": "pm2 start ecosystem.config.js --env local",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -35,5 +36,8 @@
     "passport-custom": "^1.1.1",
     "pm2": "^5.1.0",
     "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
   }
 }

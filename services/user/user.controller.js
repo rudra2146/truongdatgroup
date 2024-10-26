@@ -100,20 +100,23 @@ const loginUser = async (req, res) => {
   try {
     const user = await Service.get(email);
     if (!user) {
-      return commonResponse.customResponse(res, "INVALID_CREDENTIALS", 400, {}, 'Invalid email or password.');
-    }    console.log(user);
+      return res.status(400).json({ message: 'Invalid email or password.' });
+    }
+
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return commonResponse.customResponse(res, "INVALID_CREDENTIALS", 400, {}, 'Invalid email or password.');
+      return res.status(400).json({ message: 'Invalid email or password.' });
     }
-    const token = jwt.sign({ _id: user._id, username: user.username }, secret, { expiresIn: '1h' });
-    return commonResponse.customResponse(res, "SUCCESS", 200, { _id: user._id, email: user.email, token }, 'Login successful.');
 
+    // Include user's role in the JWT token
+    const token = jwt.sign({ _id: user._id, username: user.username, role: user.role }, process.env.JWT_SECRET || 'rudrarudra', { expiresIn: '1h' });
+
+    return res.status(200).json({ _id: user._id, email: user.email, token });
   } catch (err) {
-    console.error(err);
-    return commonResponse.customResponse(res, "SERVER_ERROR", 500, {}, 'Server error.');
+    return res.status(500).json({ message: 'Server error.' });
   }
 };
+
 
 
 // Update User

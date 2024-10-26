@@ -17,8 +17,4 @@ router.post('/update', upload.fields([
 
 router.get('/list', fieldsController.listFields);
 
-router.get('/:id', fieldsController.getAbout);
-
-// router.delete('/:id', fieldsController.deleteField);
-
 module.exports = router;

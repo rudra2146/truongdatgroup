@@ -93,23 +93,4 @@ module.exports = {
             return commonResponse.error(res, "Internal Server Error", 500, error);
         }
     },
-
-    deleteHome: async (req, res, next) => {
-        try {
-            if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-                return commonResponse.error(res, "Invalid ID format", 400, "Invalid ID format");
-            }
-
-            const home = await Home.findById(req.params.id);
-            if (!home) return res.status(404).json({ message: "Home Section Not Found" });
-
-            await home.delete();  // Soft delete
-            res.json({
-                message: "Home Section Soft Deleted",
-                data: home,
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
 };

@@ -1,24 +1,17 @@
 const express = require("express");
 const controller = require("./products.controller");
 const router = express.Router();
+const { authenticateAndAuthorize } = require('../../middlewares/authMiddleware');
 /*
  *  Add
  */
-router.post("/update", controller.manageProduct);
+router.post("/update", authenticateAndAuthorize('admin'), (req, res, next) => {
+    console.log("Decoded user:", req.user); 
+    next();
+}, controller.manageProduct);
 
-/*
- *  Get By Id
- */
-router.get("/get/:id", controller.get);
-    
 /*
  *  List All
  */
 router.get("/list/:languageCode?", controller.list);
-
-/*
- *  Delete
- */
-router.delete("/delete/:id", controller.delete);
-
 module.exports = router;
