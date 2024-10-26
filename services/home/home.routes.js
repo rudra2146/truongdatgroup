@@ -55,8 +55,6 @@ router.post('/:languageCode', (req, res, next) => {
     { name: 'homeCarouselSection[carouselImg]', maxCount: 5 }
 ]), homeController.createHome);
 
-router.post('', homeController.updateHome);
-
 router.get('/list', homeController.listHome);
 router.get('/:id', homeController.getHome);
 router.delete('/:id', homeController.deleteHome);

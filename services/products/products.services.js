@@ -18,8 +18,8 @@ exports.get = async function(id) {
  * List
  */
 exports.list = async function(query) {
-    return await ProductsModel.find(query).lean();
-}
+    return await ProductsModel.find(query).lean(); 
+};
 
 /**
  * update
@@ -34,3 +34,8 @@ exports.update = async function(id, reqBody) {
 exports.delete = async function(id) {
     return await ProductsModel.findByIdAndDelete({ _id: id }).lean();
 }
+
+
+exports.findByLanguageCode = async (languageCode) => {
+    return await ProductsModel.findOne({ language: languageCode });
+};

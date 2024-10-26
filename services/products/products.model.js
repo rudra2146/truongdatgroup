@@ -1,23 +1,26 @@
 const mongoose = require("mongoose");
-const softDelete = require("mongoosejs-soft-delete");
 
-const Schema = mongoose.Schema;
-
-const productsSchema = new Schema(
-    {
-        image: { type: String },
-        en: {
-            name: { type: String, required: true }
-        },
-        vn: {
-            name: { type: String}
-        }
-    },
-    { timestamps: true, collection: "products" }
+const productSchema = new mongoose.Schema(
+  {
+    Img: { type: String, required: true },  // Image path
+    cardTitle: { type: String, required: true }  // Title of the product
+  },
+  { _id: false }  // Disable creating _id for nested documents
 );
 
-productsSchema.plugin(softDelete);  
+const productsSchema = new mongoose.Schema(
+  {
+    bannerTitle: { type: String, required: true },
+    product: {
+      Title: { type: String, required: true },  // Title for the product category
+      btn: { type: String, required: true },    // Button text
+      products: { type: [productSchema] }  // Array of products
+    },
+    language: { type: String, default: 'vn' }
+  },
+  { timestamps: true, collection: "products" }  // Collection name and timestamps
+);
 
-const Products = mongoose.model("products", productsSchema);
+const Product = mongoose.model("Product", productsSchema);
 
-module.exports = Products;
+module.exports = Product;

@@ -99,7 +99,8 @@ module.exports = {
     
             } else {
                 // Create new home data
-    
+                const languageCode = req.headers.languagecode || 'vn'; // Use 'languagecode' as the key for the header
+
                 // Construct the header section
                 const headerSection = {
                     title,

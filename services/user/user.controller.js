@@ -34,7 +34,7 @@ const upload = multer({
       cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
     }
   }
-}).single('image');  // Only allow single image upload with the field name 'image'
+}).single('profileImage');  // Only allow single image upload with the field name 'image'
 
 
 

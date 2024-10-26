@@ -4,8 +4,13 @@ const productsRoutes = require('../services/products/index'); // Adjusted to mat
 const homeRoutes = require('../services/home/home.routes');
 // const registerRoutes = require('../services/register/register.routes');
 const userRoutes = require('../services/user/index');
+const aboutRoutes = require('../services/about/about.routes')
+const fieldsRoutes = require('../services/fieldsOfActivity/fields.routes');
+const projectRoutes = require('../services/projects/project.route');
+const recruRoutes = require('../services/recruitment/recru.routes')
+const contactRoutes = require('../services/contact/contact.routes');
 const connectDB = require('../helper/mongodb');  // Import the function directly
-const app = express();
+const app = express();  
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -17,7 +22,11 @@ const initialize = (app) => {
   app.use('/home', homeRoutes);
   // app.use('/register', registerRoutes);
   app.use('/users', userRoutes);
-
+  app.use('/about',aboutRoutes);
+  app.use('/fields',fieldsRoutes);
+  app.use('/project',projectRoutes);
+  app.use('/recruitment',recruRoutes);
+  app.use('/contact',contactRoutes);
   // Error handling route
   app.use('/authError', (req, res, next) => {
     return next(new Error('DEFAULT_AUTH'));
